@@ -12,6 +12,8 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import java.time.Duration;
+import java.util.List;
+import java.util.Random;
 
 public class Saudemo_test {
 
@@ -78,6 +80,58 @@ public class Saudemo_test {
 
         WebElement homePage = wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(".app_logo")));
         Assert.assertTrue(homePage.isDisplayed(), "No se regresó a la página principal.");
+    }
+
+    @Test
+    public void validateErrorMessage() {
+        loginTest(); // Reutilizar el login antes de comprar un producto
+
+
+        WebElement addToCartBtn = wait.until(ExpectedConditions.elementToBeClickable(By.id("add-to-cart-sauce-labs-bike-light")));
+        addToCartBtn.click();
+
+        WebElement shoppingCartBtn = driver.findElement(By.cssSelector(".shopping_cart_link"));
+        shoppingCartBtn.click();
+
+        WebElement removeBtn = wait.until(ExpectedConditions.elementToBeClickable(By.id("remove-sauce-labs-bike-light")));
+        removeBtn.click();
+
+
+        WebElement checkoutBtn = wait.until(ExpectedConditions.elementToBeClickable(By.id("checkout")));
+        checkoutBtn.click();
+
+        WebElement continueBtn = driver.findElement(By.id("continue"));
+        continueBtn.click();
+
+        WebElement errorMessage = wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//*[contains(text(), 'Error: First Name is required')]")));
+        Assert.assertTrue(errorMessage.isDisplayed(), "No se encontró el mensaje de error.");
+
+
+    }
+
+    @Test
+    public void randomProduct() {
+        loginTest(); // Reutilizar el login antes de comprar un producto
+
+        //WebElement addToCartBtn = wait.until(ExpectedConditions.elementToBeClickable(By.id("add-to-cart-sauce-labs-backpack")));
+        //addToCartBtn.click();
+
+        List<WebElement> listProducts = driver.findElements(By.cssSelector(".inventory_item_name"));
+
+        Random random = new Random();
+        int productRandom = random.nextInt(listProducts.size());
+        WebElement selectedProduct = listProducts.get(productRandom);
+        selectedProduct.click();
+        WebElement addToCartBtn = wait.until(ExpectedConditions.elementToBeClickable(By.xpath("//button[contains(text(), 'Add')]")));
+        addToCartBtn.click();
+
+        try {
+            Thread.sleep(10000);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+
+
     }
 
     @AfterMethod
