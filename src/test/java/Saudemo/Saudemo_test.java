@@ -1,9 +1,11 @@
 package Saudemo;
 
+import org.openqa.selenium.Alert;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.testng.Assert;
@@ -12,7 +14,9 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import java.time.Duration;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 public class Saudemo_test {
@@ -24,8 +28,26 @@ public class Saudemo_test {
 
     @BeforeMethod
     public void setUp() {
+        ChromeOptions options = new ChromeOptions();
+
+        options.addArguments("--incognito");
+
+        // Desactiva el aviso de guardar contraseña de Chrome
+        options.addArguments("--disable-notifications");
+        options.addArguments("--disable-popup-blocking");
+
+
+
+        // Desactiva los servicios de guardado de contraseñas
+        options.setExperimentalOption("prefs", Map.of(
+                "credentials_enable_service", false,
+                "profile.password_manager_enabled", false
+        ));
+
+
+
         System.setProperty("webdriver.chrome.driver", chromeDriverPath);
-        driver = new ChromeDriver();
+        driver = new ChromeDriver(options);
         wait = new WebDriverWait(driver, Duration.ofSeconds(10)); // Esperas explícitas
         driver.manage().window().maximize();
         driver.get(urlPage);
@@ -40,6 +62,7 @@ public class Saudemo_test {
         usuario.sendKeys("standard_user");
         pass.sendKeys("secret_sauce");
         btnLogin.click();
+
 
         // Validación de inicio de sesión
         WebElement productPage = wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//*[contains(text(), 'Products')]")));
@@ -132,6 +155,38 @@ public class Saudemo_test {
         }
 
 
+    }
+
+    @Test
+    public void lockOutUserTest() {
+        WebElement usuario = wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("user-name")));
+        WebElement pass = driver.findElement(By.id("password"));
+        WebElement btnLogin = driver.findElement(By.id("login-button"));
+
+        usuario.sendKeys("locked_out_user");
+        pass.sendKeys("secret_sauce");
+        btnLogin.click();
+
+
+        // Validación mensaje de error "Epic sadface: Sorry, this user has been locked out."
+        WebElement productPage = wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//*[contains(text(), 'Epic')]")));
+        Assert.assertTrue(productPage.isDisplayed(), "No se encontró la página de productos, el login falló.");
+    }
+
+    @Test
+    public void userAndPassInvalidTest() {
+        WebElement usuario = wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("user-name")));
+        WebElement pass = driver.findElement(By.id("password"));
+        WebElement btnLogin = driver.findElement(By.id("login-button"));
+
+        usuario.sendKeys("andres");
+        pass.sendKeys("secret_sauce");
+        btnLogin.click();
+
+
+        // Validación mensaje de error "Epic sadface: Username and password do not match any user in this service"
+        WebElement productPage = wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//*[contains(text(), 'Username and password')]")));
+        Assert.assertTrue(productPage.isDisplayed(), "No se encontró la página de productos, el login falló.");
     }
 
     @AfterMethod
